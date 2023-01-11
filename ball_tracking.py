@@ -1,3 +1,6 @@
+#Current method used to track a baseball
+#Not very effective as it gets affected a lot by lighting as well a setting
+
 import cv2
 import numpy as np
 
