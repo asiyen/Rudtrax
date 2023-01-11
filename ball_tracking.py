@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import time
 
 # Initialize the video capture object
 cap = cv2.VideoCapture(0)
@@ -9,17 +8,15 @@ cap = cv2.VideoCapture(0)
 lower_color = np.array([0, 0, 200])
 upper_color = np.array([255, 255, 255])
 
-# Initialize the previous center of the contour and timestamps
+# Initialize the previous frame and the previous center of the contour
+prev_frame = None
 prev_center = None
-prev_time = None
-prev_prev_center = None
-prev_prev_time = None
 
 # Loop through frames
 while True:
     # Read the current frame
     ret, frame = cap.read()
-    current_time = time.time()
+
     # Convert the frame to HSV color space
     hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
@@ -45,23 +42,18 @@ while True:
         cv2.circle(frame, (cX, cY), 10, (255, 0, 0), -1)
 
         # Calculate the velocity of the ball if the previous frame and previous center are available
-        if prev_prev_center is not None and prev_prev_time is not None:
-            dt = current_time - prev_prev_time
-            if dt > 0.5:
-                dx = cX - prev_prev_center[0]
-                dy = cY - prev_prev_center[1]
-                v = (dx**2 + dy**2)**0.5 / dt
-                print(f'Velocity: {v:.2f} pixels/s')
-                prev_prev_center = None
-                prev_prev_time = None
-            else:
-                prev_prev_center = prev_center
-                prev_prev_time = prev_time
-        else:
-            prev_prev_center = prev_center
-            prev_prev_time = prev_time
+        if prev_frame is not None and prev_center is not None:
+            dt = 1/30 # assuming that the video is 30 FPS
+            dx = cX - prev_center[0]
+            dy = cY - prev_center[1]
+            vx = dx / dt
+            vy = dy / dt
+            v = (vx**2 + vy**2)**0.5
+            print(f'Velocity: {v:.2f} pixels/s')
+
+        # Update the previous frame and previous center
+        prev_frame = frame
         prev_center = (cX, cY)
-        prev_time = current_time
 
     # Show the frame
     cv2.imshow("Tracking", frame)
